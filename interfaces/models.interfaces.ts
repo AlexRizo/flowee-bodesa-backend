@@ -1,0 +1,1 @@
+export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'ADMIN_DESIGN' | 'ADMIN_PUBLISHER' | 'PUBLISHER' | 'DESIGNER';

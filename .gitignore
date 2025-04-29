@@ -1,0 +1,61 @@
+# Dependencias
+node_modules/
+/.pnp
+.pnp.js
+
+# Archivos de entorno
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de construcción
+/build
+/dist
+/.next/
+/out/
+
+# Archivos de caché
+.cache/
+.npm
+.eslintcache
+.parcel-cache
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de cobertura de pruebas
+coverage/
+.nyc_output
+
+# Archivos temporales
+tmp/
+temp/
+
+# Archivos de IDE y editores
+/.idea
+/.vscode
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Archivos específicos de TypeScript
+*.tsbuildinfo
+
+# Archivos de Cloudinary (uploads locales)
+uploads/
+
+# Archivos de respaldo
+*.bak
+*.backup
