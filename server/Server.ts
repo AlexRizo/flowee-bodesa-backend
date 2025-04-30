@@ -1,23 +1,32 @@
 import cookieParser from "cookie-parser";
 import express from "express";
-// import http from "http";
+import http from "http";
 import cors from "cors";
+import { Server as SocketIOServer } from "socket.io";
 
 import { getEnv } from "../helpers/getEnv";
 import { databaseConnection } from '../db/databaseConnection';
 
 import { authRoutes, usersRoutes, boardRoutes, requestRoutes } from "../routes";
+import { socketController } from "../sockets/socketController";
 
 class Server {
   private app: express.Application;
   private port: number | string;
-  // private server: http.Server;
+  private server: http.Server;
+  private io: SocketIOServer;
   private paths: { [key: string]: string };
 
   constructor() {
     this.app = express();
     this.port = getEnv.PORT || 3000;
-    // this.server = http.createServer(this.app);
+    this.server = http.createServer(this.app);
+    this.io = new SocketIOServer(this.server, {
+      cors: {
+        origin: 'http://localhost:5173',
+        credentials: true,
+      },
+    });
     this.paths = {
       auth: '/api/auth',
       users: '/api/users',
@@ -27,6 +36,7 @@ class Server {
     this.initDB();
     this.middlewares();
     this.routes();
+    this.socket();
   }
 
   private initDB() {
@@ -55,12 +65,14 @@ class Server {
         message: 'Route not found',
       });
     });
+  }
 
-    // this.app.use(errorHandler as ErrorRequestHandler);
+  private socket() {
+    this.io.on('connection', socketController);
   }
 
   public start() {
-    this.app.listen(this.port, () => {
+    this.server.listen(this.port, () => {
       console.log(`🟢 Server is running on port ${this.port}`);
     });
   }

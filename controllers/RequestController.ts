@@ -71,6 +71,7 @@ export const createRequest: RequestController = async (
       ...rest,
       author: authorExists.id,
       board: boardExists.id,
+      finishDate: new Date(finishDate),
       files,
     });
 
