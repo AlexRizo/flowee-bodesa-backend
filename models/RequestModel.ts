@@ -5,6 +5,7 @@ export interface RequestInterface extends Document {
   title: string;
   description: string;
   status: Status;
+  type: Type;
   priority: Priority;
   author: Schema.Types.ObjectId;
   board: Schema.Types.ObjectId;
@@ -23,6 +24,13 @@ export enum Status {
   DONE = 'DONE',
 }
 
+enum Type {
+  PRINTED = 'PRINTED',
+  DIGITAL = 'DIGITAL',
+  ECOMMERCE = 'ECOMMERCE',
+  SPECIAL = 'SPECIAL',
+}
+
 enum Priority {
   LOW = 'LOW',
   NORMAL = 'NORMAL',
@@ -38,6 +46,12 @@ export const Request = model<RequestInterface>('Request', new Schema({
   description: {
     type: String,
     required: true,
+  },
+  type: {
+    type: String,
+    enum: Type,
+    required: true,
+    default: Type.SPECIAL,
   },
   status: {
     type: String,

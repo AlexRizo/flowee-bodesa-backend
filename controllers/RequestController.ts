@@ -4,14 +4,52 @@ import { User } from "../models/UserModel";
 import { Board } from "../models/BoardModel";
 import { RequestController } from "./controllers.interface";
 import { deleteFiles, uploadFiles } from "../helpers/cloudinaryConfig";
+import { Role } from "../interfaces/models.interfaces";
+
+const getRequestByRole = async (role: Role, userId: string, boardId: string) => {
+  let query: any = {};
+
+  const isAdmin = [Role.SUPER_ADMIN, Role.ADMIN, Role.ADMIN_DESIGN, Role.ADMIN_PUBLISHER];
+
+  
+  if (!isAdmin.includes(role)) {
+    query = {
+      $or: [
+        { author: userId },
+        { assignedTo: userId },
+      ],
+      board: boardId,
+    }
+  } else {
+    query = {
+      board: boardId,
+    }
+  }
+
+  const requests = await RequestModel.find(query)
+    .populate('author', 'id name avatar')
+    .populate('assignedTo', 'id name avatar')
+    .populate('board', 'id name');
+
+  return requests;
+}
 
 export const getRequests: RequestController = async (
   req: Request,
   res: Response
 ) => {
   const { boardSlug } = req.params;
+  const { user } = req;
 
   try {
+    const userExists = await User.findById(user?.id);
+    if (!userExists) {
+      return res.status(404).json({
+        message: "No se encontró el usuario",
+        ok: false,
+      });
+    }
+    
     const boardExists = await Board.findOne({ slug: boardSlug });
     if (!boardExists) {
       return res.status(404).json({
@@ -21,9 +59,7 @@ export const getRequests: RequestController = async (
       });
     }
     
-    const requests = await RequestModel.find({ board: boardExists.id })
-      .populate('author', 'id name avatar')
-      .populate('board', 'id name');
+    const requests = await getRequestByRole(userExists.role, userExists.id, boardExists.id);
 
     return res.status(200).json({
       ok: true,
