@@ -6,33 +6,38 @@ import { RequestController } from "./controllers.interface";
 import { deleteFiles, uploadFiles } from "../helpers/cloudinaryConfig";
 import { Role } from "../interfaces/models.interfaces";
 
-const getRequestByRole = async (role: Role, userId: string, boardId: string) => {
+const getRequestByRole = async (
+  role: Role,
+  userId: string,
+  boardId: string
+) => {
   let query: any = {};
 
-  const isAdmin = [Role.SUPER_ADMIN, Role.ADMIN, Role.ADMIN_DESIGN, Role.ADMIN_PUBLISHER];
+  const isAdmin = [
+    Role.SUPER_ADMIN,
+    Role.ADMIN,
+    Role.ADMIN_DESIGN,
+    Role.ADMIN_PUBLISHER,
+  ];
 
-  
   if (!isAdmin.includes(role)) {
     query = {
-      $or: [
-        { author: userId },
-        { assignedTo: userId },
-      ],
+      $or: [{ author: userId }, { assignedTo: userId }],
       board: boardId,
-    }
+    };
   } else {
     query = {
       board: boardId,
-    }
+    };
   }
 
   const requests = await RequestModel.find(query)
-    .populate('author', 'id name avatar')
-    .populate('assignedTo', 'id name avatar')
-    .populate('board', 'id name');
+    .populate("author", "id name avatar")
+    .populate("assignedTo", "id name avatar")
+    .populate("board", "id name initials color");
 
   return requests;
-}
+};
 
 export const getRequests: RequestController = async (
   req: Request,
@@ -49,7 +54,7 @@ export const getRequests: RequestController = async (
         ok: false,
       });
     }
-    
+
     const boardExists = await Board.findOne({ slug: boardSlug });
     if (!boardExists) {
       return res.status(404).json({
@@ -58,8 +63,12 @@ export const getRequests: RequestController = async (
         redirect: true,
       });
     }
-    
-    const requests = await getRequestByRole(userExists.role, userExists.id, boardExists.id);
+
+    const requests = await getRequestByRole(
+      userExists.role,
+      userExists.id,
+      boardExists.id
+    );
 
     return res.status(200).json({
       ok: true,
@@ -67,7 +76,76 @@ export const getRequests: RequestController = async (
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Ha ocurrido un error desconocido. ERR [500]", ok: false });
+    return res
+      .status(500)
+      .json({
+        message: "Ha ocurrido un error desconocido. ERR [500]",
+        ok: false,
+      });
+  }
+};
+
+export const getMyRequests: RequestController = async (
+  req: Request,
+  res: Response
+) => {
+  const { user } = req;
+
+  try {
+    if (!user) {
+      return res.status(404).json({
+        message: "No se encontró el usuario",
+        ok: false,
+      });
+    }
+
+    const requests = await RequestModel.find({ assignedTo: user.id })
+      .populate("author", "id name avatar")
+      .populate("assignedTo", "id name avatar")
+      .populate("board", "id name initials color");
+
+    return res.status(200).json({
+      ok: true,
+      requests,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Ha ocurrido un error desconocido. ERR [500]",
+      ok: false,
+    });
+  }
+};
+
+export const getRequest: RequestController = async (
+  req: Request,
+  res: Response
+) => {
+  const { requestId } = req.params; 
+
+  try {
+    const request = await RequestModel.findById(requestId)
+      .populate("author", "id name avatar")
+      .populate("assignedTo", "id name avatar")
+      .populate("board", "id name initials color");
+
+    if (!request) {
+      return res.status(404).json({
+        message: "No se encontró la solicitud",
+        ok: false,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      request,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Ha ocurrido un error desconocido. ERR [500]",
+      ok: false,
+    });
   }
 };
 
@@ -77,6 +155,10 @@ export const createRequest: RequestController = async (
 ) => {
   const { board, finishDate, ...rest } = req.body;
   const author = req.user;
+
+  const { isAuto } = req.query;
+  const isAutoAssign = isAuto === "true" ? true : false;
+  
   let files = [];
 
   try {
@@ -88,7 +170,7 @@ export const createRequest: RequestController = async (
       });
     }
 
-    const boardExists = await Board.findOne({ slug: board });
+    const boardExists = await Board.findOne({ $or: [{ slug: board }, { _id: board }] });
     if (!boardExists) {
       return res.status(404).json({
         message: "No se encontró el tablero",
@@ -109,6 +191,7 @@ export const createRequest: RequestController = async (
       board: boardExists.id,
       finishDate: new Date(finishDate),
       files,
+      assignedTo: isAutoAssign ? authorExists.id : null,
     });
 
     return res.status(201).json({
@@ -149,13 +232,17 @@ export const updateRequestStatus: RequestController = async (
       });
     }
 
-    const updatedRequest = await RequestModel.findByIdAndUpdate(requestId, { status }, { new: true });
+    const updatedRequest = await RequestModel.findByIdAndUpdate(
+      requestId,
+      { status },
+      { new: true }
+    );
 
     return res.status(200).json({
       message: "Se ha actualizado la solicitud correctamente",
       ok: true,
       updatedRequest,
-    }); 
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({

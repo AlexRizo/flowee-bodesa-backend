@@ -43,7 +43,6 @@ export const createBoard: ControllerFunction = async (req: Request, res: Respons
 export const getAllBoards: ControllerFunction = async (req: Request, res: Response) => {
   try {
     const boards = await Board.find();
-
     res.status(200).json({
       ok: true,
       boards,

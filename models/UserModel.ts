@@ -36,8 +36,8 @@ export const User = model<UserInterface>('User', new Schema({
   role: {
     type: String,
     required: true,
-    default: "PUBLISHER", // ? 'ADMIN_DESIGN' | 'ADMIN_PUBLISHER' | 'PUBLISHER' | 'DESIGNER' | 'ADMIN' | 'SUPER_ADMIN
-    enum: ['SUPER_ADMIN', 'ADMIN', 'ADMIN_DESIGN', 'ADMIN_PUBLISHER', 'PUBLISHER', 'DESIGNER'],
+    default: Role.PUBLISHER, // ? 'ADMIN_DESIGN' | 'ADMIN_PUBLISHER' | 'PUBLISHER' | 'DESIGNER' | 'ADMIN' | 'SUPER_ADMIN
+    enum: Object.values(Role),
   },
   active: {
     type: Boolean,

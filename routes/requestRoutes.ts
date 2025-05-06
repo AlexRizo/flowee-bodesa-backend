@@ -1,7 +1,7 @@
 import { RequestHandler, Router } from "express";
 import { expressValidator, multerUpload } from "../helpers/utils";
 import { verifyToken } from "../middlewares/JWT";
-import { createRequest, getRequests, updateRequestStatus } from "../controllers/RequestController";
+import { createRequest, getRequests, updateRequestStatus, getMyRequests, getRequest } from "../controllers/RequestController";
 import { publisherRoute } from "../middlewares/protectedRoute";
 import { body } from "express-validator";
 import { multerErrorHandler } from "../middlewares/multer";
@@ -34,7 +34,11 @@ router.post("/create",
   createRequest as RequestHandler
 );
 
-router.get("/:boardSlug", getRequests as RequestHandler);
+router.get("/get-my-requests", getMyRequests as RequestHandler);
+
+router.get("/single/:requestId", getRequest as RequestHandler);
+
+router.get("/by-board/:boardSlug", getRequests as RequestHandler);
 
 router.patch("/:requestId", [
   body('status', 'El estado es requerido')

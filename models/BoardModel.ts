@@ -4,6 +4,8 @@ export interface BoardInterface extends Document {
   id: string;
   name: string;
   slug: string;
+  color: string;
+  initials: string;
   active: boolean;
   createdAt: Date;
 }
@@ -17,6 +19,14 @@ export const Board = model<BoardInterface>('Board', new Schema({
   slug: {
     type: String,
     unique: true,
+    required: true,
+  },
+  color: {
+    type: String,
+    required: true,
+  },
+  initials: {
+    type: String,
     required: true,
   },
   active: {

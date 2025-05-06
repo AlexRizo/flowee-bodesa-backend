@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { User, UserInterface } from "../models/UserModel";
 import { encryptPassword, globalQuery, RESULTS_PER_PAGE } from "../helpers/utils";
+import { Role } from "../interfaces/models.interfaces";
+import { Request as RequestModel } from "../models/RequestModel";
 
 interface UserResponse {
   users: UserInterface[];
@@ -139,3 +141,51 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response 
     });
   }
 }
+
+export const getDesigners = async (req: Request, res: Response): Promise<Response | void> => {
+  const user = req.user;
+
+  try {
+    const userExists = await User.findById(user?.id);
+
+    if (!userExists) {
+      return res.status(404).json({
+        ok: false,
+        message: "Usuario no encontrado"
+      });
+    }
+
+    const designers = await User.find({ ...globalQuery, role: Role.DESIGNER, boards: { $in: userExists.boards } })
+    .select("id name avatar");
+
+    const designerIds = designers.map((designer) => designer.id);
+
+    const requestsPerDesigner = await RequestModel.countDocuments({ assignedTo: designerIds[0] });
+
+    const requestsss = await RequestModel.find({ assignedTo: designerIds[0] });
+
+    console.log(designerIds[0]);
+
+    // const designersWithRequests = designers.map((designer) => {
+    //   const requests = requestsPerDesigner.find((request) => request._id.toString() === designer.id);
+    //   return {
+    //     ...designer.toObject(),
+    //     requests: requests ? requests.count : 0,
+    //   };
+    // });
+
+    console.log(requestsPerDesigner);
+
+    return res.status(200).json({
+      ok: true,
+      designers
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      message: "Ha ocurrido un error interno (Error en el servidor [500])"
+    });
+  }
+}
+

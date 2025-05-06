@@ -1,7 +1,7 @@
 import { RequestHandler, Router } from "express";
 import { verifyToken } from "../middlewares/JWT";
-import { createUser, getAllUsers, deleteUser } from "../controllers/usersController";
-import { adminRoute } from "../middlewares/protectedRoute";
+import { createUser, getAllUsers, deleteUser, getDesigners } from "../controllers/usersController";
+import { adminDesignRoute, adminRoute } from "../middlewares/protectedRoute";
 import { body } from "express-validator";
 import { expressValidator } from "../helpers/utils";
 import { userValidation } from "../middlewares/UserValidation";
@@ -42,6 +42,11 @@ router.post("/create", [
 router.patch('/delete/:id',
   adminRoute as RequestHandler,
   deleteUser as RequestHandler
+);
+
+router.get('/designers',
+  adminDesignRoute as RequestHandler,
+  getDesigners as RequestHandler
 );
 
 export default router;

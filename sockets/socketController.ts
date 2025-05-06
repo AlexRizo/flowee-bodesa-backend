@@ -1,14 +1,7 @@
 import { Socket, Server } from 'socket.io';
 
 export const socketController = (socket: Socket, io: Server) => {
-  // console.log('Nuevo cliente conectado', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('Cliente desconectado', socket.id);
-  });
-
   socket.on('join-board', (boardSlug: string) => {
-    // console.log(`El usuario ${socket.id} se ha unido al tablero ${boardSlug}`);
     socket.join(boardSlug);
   });
 
@@ -17,7 +10,6 @@ export const socketController = (socket: Socket, io: Server) => {
   });
 
   socket.on('join-notifications', (userId: string) => {
-    console.log(`El usuario ${userId} se ha unido a las notificaciones`);
     socket.join(userId);
   });
 
@@ -27,7 +19,6 @@ export const socketController = (socket: Socket, io: Server) => {
   });
   
   socket.on('touch-notification', (userId: string) => {
-    console.log(`El usuario ${userId} ha tocado una notificación`);
     io.to(userId).emit('new-notification', 'Hola Mundooooooooooooooo');
   });
 }

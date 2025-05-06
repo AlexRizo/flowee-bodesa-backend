@@ -76,6 +76,7 @@ export const Request = model<RequestInterface>('Request', new Schema({
   assignedTo: {
     type: Schema.Types.ObjectId,
     ref: 'User',
+    default: null,
   },
   files: {
     type: [{ secureUrl: String, publicId: String }],
