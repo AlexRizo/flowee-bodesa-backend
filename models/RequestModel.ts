@@ -12,6 +12,7 @@ export interface RequestInterface extends Document {
   assignedTo?: Schema.Types.ObjectId;
   files: { secureUrl: string, publicId: string }[];
   finishDate: Date;
+  isAutoAssigned: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -86,6 +87,10 @@ export const Request = model<RequestInterface>('Request', new Schema({
     type: Date,
     default: Date.now,
     required: true,
+  },
+  isAutoAssigned: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,

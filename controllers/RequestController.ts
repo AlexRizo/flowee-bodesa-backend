@@ -5,6 +5,7 @@ import { Board } from "../models/BoardModel";
 import { RequestController } from "./controllers.interface";
 import { deleteFiles, uploadFiles } from "../helpers/cloudinaryConfig";
 import { Role } from "../interfaces/models.interfaces";
+import mongoose from "mongoose";
 
 const getRequestByRole = async (
   role: Role,
@@ -85,6 +86,7 @@ export const getRequests: RequestController = async (
   }
 };
 
+// ? Para autoasignaciones;
 export const getMyRequests: RequestController = async (
   req: Request,
   res: Response
@@ -99,7 +101,7 @@ export const getMyRequests: RequestController = async (
       });
     }
 
-    const requests = await RequestModel.find({ assignedTo: user.id })
+    const requests = await RequestModel.find({ assignedTo: user.id, isAutoAssigned: true })
       .populate("author", "id name avatar")
       .populate("assignedTo", "id name avatar")
       .populate("board", "id name initials color");
@@ -156,6 +158,8 @@ export const createRequest: RequestController = async (
   const { board, finishDate, ...rest } = req.body;
   const author = req.user;
 
+  const boardIsId = mongoose.Types.ObjectId.isValid(board);
+
   const { isAuto } = req.query;
   const isAutoAssign = isAuto === "true" ? true : false;
   
@@ -170,7 +174,13 @@ export const createRequest: RequestController = async (
       });
     }
 
-    const boardExists = await Board.findOne({ $or: [{ slug: board }, { _id: board }] });
+    const boardExists = await Board.findOne({
+      $or: [
+        { slug: board },
+        ...(boardIsId ? [{ _id: board }] : [])
+      ] 
+    });
+
     if (!boardExists) {
       return res.status(404).json({
         message: "No se encontró el tablero",
@@ -192,6 +202,7 @@ export const createRequest: RequestController = async (
       finishDate: new Date(finishDate),
       files,
       assignedTo: isAutoAssign ? authorExists.id : null,
+      isAutoAssigned: isAutoAssign,
     });
 
     return res.status(201).json({
