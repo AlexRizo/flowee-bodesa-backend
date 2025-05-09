@@ -7,7 +7,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { getEnv } from "../helpers/getEnv";
 import { databaseConnection } from '../db/databaseConnection';
 
-import { authRoutes, usersRoutes, boardRoutes, requestRoutes } from "../routes";
+import { authRoutes, usersRoutes, boardRoutes, requestRoutes, formatRoutes } from "../routes";
 import { socketController } from "../sockets/socketController";
 
 class Server {
@@ -32,6 +32,7 @@ class Server {
       users: '/api/users',
       boards: '/api/boards',
       requests: '/api/requests',
+      formats: '/api/formats',
     };
     this.initDB();
     this.middlewares();
@@ -58,6 +59,7 @@ class Server {
     this.app.use(this.paths.users, usersRoutes);
     this.app.use(this.paths.boards, boardRoutes);
     this.app.use(this.paths.requests, requestRoutes);
+    this.app.use(this.paths.formats, formatRoutes);
 
     this.app.use('/*', (req, res) => {
       res.status(404).json({

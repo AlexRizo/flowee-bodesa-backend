@@ -1,7 +1,7 @@
 import { RequestHandler, Router } from "express";
 import { expressValidator, multerUpload } from "../helpers/utils";
 import { verifyToken } from "../middlewares/JWT";
-import { createRequest, getRequests, updateRequestStatus, getMyRequests, getRequest } from "../controllers/RequestController";
+import { createRequest, getRequests, updateRequestStatus, getMyRequests, getRequest } from "../controllers/requestController";
 import { publisherRoute } from "../middlewares/protectedRoute";
 import { body } from "express-validator";
 import { multerErrorHandler } from "../middlewares/multer";

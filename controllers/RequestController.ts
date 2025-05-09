@@ -104,7 +104,7 @@ export const getMyRequests: RequestController = async (
     const requests = await RequestModel.find({ assignedTo: user.id, isAutoAssigned: true })
       .populate("author", "id name avatar")
       .populate("assignedTo", "id name avatar")
-      .populate("board", "id name initials color");
+      .populate("board", "id name slug initials color");
 
     return res.status(200).json({
       ok: true,

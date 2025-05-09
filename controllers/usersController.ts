@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { User, UserInterface } from "../models/UserModel";
 import { encryptPassword, globalQuery, RESULTS_PER_PAGE } from "../helpers/utils";
 import { Role } from "../interfaces/models.interfaces";
-import { Request as RequestModel } from "../models/RequestModel";
+import { Request as RequestModel, Status } from "../models/RequestModel";
 
 interface UserResponse {
   users: UserInterface[];
@@ -155,30 +155,59 @@ export const getDesigners = async (req: Request, res: Response): Promise<Respons
       });
     }
 
-    const designers = await User.find({ ...globalQuery, role: Role.DESIGNER, boards: { $in: userExists.boards } })
+    const designers = await User.find({ ...globalQuery, role: Role.DESIGNER })
     .select("id name avatar");
 
-    const designerIds = designers.map((designer) => designer.id);
+    const designersWithRequests = await Promise.all(
+      designers.map(async (designer) => {
+        const aggregated = await RequestModel.aggregate([
+          {
+            $match: { assignedTo: designer._id }
+          },
+          {
+            $group: {
+              _id: "$status",
+              count: { $sum: 1 }
+            }
+          }
+        ]);
 
-    const requestsPerDesigner = await RequestModel.countDocuments({ assignedTo: designerIds[0] });
+        const requests = {
+          pending: 0,
+          attention: 0,
+          inProgress: 0,
+          total: 0
+        }
 
-    const requestsss = await RequestModel.find({ assignedTo: designerIds[0] });
+        for(const item of aggregated) {
+          if(item._id === Status.PENDING) {
+            requests.pending = item.count;
+          }
 
-    console.log(designerIds[0]);
+          if(item._id === Status.ATTENTION) {
+            requests.attention = item.count;
+          }
+          
+          if (item._id === Status.IN_PROGRESS) {
+            requests.inProgress = item.count;
+          }
+        }
 
-    // const designersWithRequests = designers.map((designer) => {
-    //   const requests = requestsPerDesigner.find((request) => request._id.toString() === designer.id);
-    //   return {
-    //     ...designer.toObject(),
-    //     requests: requests ? requests.count : 0,
-    //   };
-    // });
+        return {
+          ...designer.toObject(),
+          requests: {
+            ...requests,
+            total: requests.pending + requests.attention + requests.inProgress
+          }
+        };
+      })
+    );
 
-    console.log(requestsPerDesigner);
+    console.log(designersWithRequests);
 
     return res.status(200).json({
       ok: true,
-      designers
+      designers: designersWithRequests
     });
   } catch (error) {
     console.error(error);

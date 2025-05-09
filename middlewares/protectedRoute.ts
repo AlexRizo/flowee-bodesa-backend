@@ -22,6 +22,28 @@ export const adminRoute = (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+export const adminsRoute = (req: Request, res: Response, next: NextFunction) => {
+  const { user } = req;
+
+  if (!user) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Unauthorized'
+    });
+  }
+
+  const allowedRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.ADMIN_DESIGN, Role.ADMIN_PUBLISHER];
+
+  if (allowedRoles.includes(user.role)) {
+    next();
+  } else {
+    return res.status(401).json({
+      ok: false,
+      message: 'Unauthorized'
+    });
+  }
+}
+
 export const publisherRoute = (req: Request, res: Response, next: NextFunction) => {
   const { user } = req;
 
@@ -32,7 +54,7 @@ export const publisherRoute = (req: Request, res: Response, next: NextFunction) 
     });
   }
 
-  const allowedRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.PUBLISHER, Role.ADMIN_PUBLISHER, Role.ADMIN_DESIGN];
+  const allowedRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.PUBLISHER, Role.ADMIN_PUBLISHER];
 
   if (allowedRoles.includes(user.role)) {
     next();
