@@ -6,7 +6,6 @@ import { Category } from "../models/CategoryModel";
 export const getFormats = async (req: Request, res: Response) => {
   const { page = 1 } = req.query;
   const skip = (Number(page) - 1) * RESULTS_PER_PAGE;
-  console.log(page, skip);
 
   try {
     const formats = await Format.find()
@@ -33,7 +32,6 @@ export const getFormats = async (req: Request, res: Response) => {
 export const getCategories = async (req: Request, res: Response) => {
   const { page = 1 } = req.query;
   const skip = (Number(page) - 1) * RESULTS_PER_PAGE;
-  console.log(page, skip);
 
   try {
     const categories = await Category.find()
@@ -57,7 +55,7 @@ export const getCategories = async (req: Request, res: Response) => {
 };
 
 export const createFormat = async (req: Request, res: Response) => {
-  const { name, slug } = req.body;
+  const { name, slug, belongsTo, description } = req.body;
 
   try {
     const slugFormatExists = await Format.findOne({ slug });
@@ -69,7 +67,16 @@ export const createFormat = async (req: Request, res: Response) => {
       });
     }
 
-    await Format.create({ name, slug });
+    const category = await Category.findOne({ slug: belongsTo });
+
+    if (!category) {
+      return res.status(400).json({
+        ok: false,
+        message: "La categoría no existe"
+      });
+    }
+
+    await Format.create({ name, slug, belongsTo: category._id, description });
 
     res.status(201).json({
       ok: true,

@@ -19,7 +19,7 @@ export const Format = model<FormatInterface>('Format', new Schema({
   description: {
     type: String,
     required: true,
-    maxlength: 1000,
+    maxlength: 500,
   },
   belongsTo: {
     type: Schema.Types.ObjectId,
