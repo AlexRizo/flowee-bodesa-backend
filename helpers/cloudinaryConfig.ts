@@ -6,11 +6,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadFiles = (fileBuffer: Buffer, fieldName: string): Promise<{ publicId: string, secureUrl: string }> => {
+export const uploadFiles = (fileBuffer: Buffer, fieldName: string, folder: string = ''): Promise<{ publicId: string, secureUrl: string }> => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: 'requests',
+        folder: `requests/${folder}`,
         public_id: fieldName.split('.')[0].toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // eliminar acentos
           .replace(/[^a-z0-9]/g, '-') // reemplazar caracteres especiales por guiones

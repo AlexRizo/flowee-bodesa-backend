@@ -77,12 +77,10 @@ export const getRequests: RequestController = async (
     });
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json({
-        message: "Ha ocurrido un error desconocido. ERR [500]",
-        ok: false,
-      });
+    return res.status(500).json({
+      message: "Ha ocurrido un error desconocido. ERR [500]",
+      ok: false,
+    });
   }
 };
 
@@ -101,7 +99,10 @@ export const getMyRequests: RequestController = async (
       });
     }
 
-    const requests = await RequestModel.find({ assignedTo: user.id, isAutoAssigned: true })
+    const requests = await RequestModel.find({
+      assignedTo: user.id,
+      isAutoAssigned: true,
+    })
       .populate("author", "id name avatar")
       .populate("assignedTo", "id name avatar")
       .populate("board", "id name slug initials color");
@@ -123,7 +124,7 @@ export const getRequest: RequestController = async (
   req: Request,
   res: Response
 ) => {
-  const { requestId } = req.params; 
+  const { requestId } = req.params;
 
   try {
     const request = await RequestModel.findById(requestId)
@@ -162,8 +163,19 @@ export const createRequest: RequestController = async (
 
   const { isAuto } = req.query;
   const isAutoAssign = isAuto === "true" ? true : false;
-  
-  let files = [];
+
+  const files = req.files as {
+    files?: Express.Multer.File[];
+    referenceFiles?: Express.Multer.File[];
+  };
+
+  let filesUploaded: {
+    files: { publicId: string; secureUrl: string }[];
+    referenceFiles: { publicId: string; secureUrl: string }[];
+  } = {
+    files: [],
+    referenceFiles: [],
+  };
 
   try {
     const authorExists = await User.findById(author?.id);
@@ -178,7 +190,7 @@ export const createRequest: RequestController = async (
       $or: [
         { slug: board },
         ...(boardIsId ? [{ _id: board }] : [])
-      ] 
+      ]
     });
 
     if (!boardExists) {
@@ -188,10 +200,17 @@ export const createRequest: RequestController = async (
       });
     }
 
-    if (req.files?.length) {
-      for (const file of req.files as Express.Multer.File[]) {
-        const result = await uploadFiles(file.buffer, file.fieldname);
-        files.push(result);
+    if (files.files?.length) {
+      for (const file of files.files as Express.Multer.File[]) {
+        const result = await uploadFiles(file.buffer, file.originalname, "files");
+        filesUploaded.files.push(result);
+      }
+    }
+
+    if (files.referenceFiles?.length) {
+      for (const file of files.referenceFiles as Express.Multer.File[]) {
+        const result = await uploadFiles(file.buffer, file.originalname, "reference_files");
+        filesUploaded.referenceFiles.push(result);
       }
     }
 
@@ -200,7 +219,8 @@ export const createRequest: RequestController = async (
       author: authorExists.id,
       board: boardExists.id,
       finishDate: new Date(finishDate),
-      files,
+      files: filesUploaded.files,
+      referenceFiles: filesUploaded.referenceFiles,
       assignedTo: isAutoAssign ? authorExists.id : null,
       isAutoAssigned: isAutoAssign,
     });
@@ -212,7 +232,8 @@ export const createRequest: RequestController = async (
     });
   } catch (error) {
     console.error(error);
-    deleteFiles(files);
+    deleteFiles(filesUploaded.files);
+    deleteFiles(filesUploaded.referenceFiles);
     return res.status(500).json({
       message: "Ha ocurrido un error desconocido. ERR [500]",
       ok: false,

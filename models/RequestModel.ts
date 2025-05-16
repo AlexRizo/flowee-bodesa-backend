@@ -4,15 +4,18 @@ export interface RequestInterface extends Document {
   id: string;
   title: string;
   description: string;
+  priority: Priority;
+  legals: string;
+  isAutoAssigned: boolean;
   status: Status;
   type: Type;
-  priority: Priority;
+  size: string;
   author: Schema.Types.ObjectId;
   board: Schema.Types.ObjectId;
   assignedTo?: Schema.Types.ObjectId;
+  referenceFiles: { secureUrl: string, publicId: string }[];
   files: { secureUrl: string, publicId: string }[];
   finishDate: Date;
-  isAutoAssigned: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,12 +50,23 @@ export const Request = model<RequestInterface>('Request', new Schema({
   description: {
     type: String,
     required: true,
+    maxLength: 1000,
   },
   type: {
     type: String,
     enum: Type,
     required: true,
     default: Type.SPECIAL,
+  },
+  legals: {
+    type: String,
+    required: true,
+    maxLength: 500,
+  },
+  size: {
+    type: String,
+    required: true,
+    maxLength: 100,
   },
   status: {
     type: String,
@@ -78,6 +92,10 @@ export const Request = model<RequestInterface>('Request', new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     default: null,
+  },
+  referenceFiles: {
+    type: [{ secureUrl: String, publicId: String }],
+    default: [],
   },
   files: {
     type: [{ secureUrl: String, publicId: String }],

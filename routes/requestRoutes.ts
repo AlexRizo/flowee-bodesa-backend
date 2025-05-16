@@ -13,22 +13,30 @@ router.use(verifyToken as RequestHandler);
 
 router.post("/create",
   publisherRoute as RequestHandler,
-  multerUpload.array('files', 5),
+  multerUpload.fields([
+    { name: 'files', maxCount: 5 },
+    { name: 'referenceFiles', maxCount: 5 },
+  ]),
   multerErrorHandler,
   [
     body('title', 'El título es requerido')
       .notEmpty()
-      .isLength({ min: 5, max: 100 }),
+      .isLength({ min: 5, max: 100 })
+      .withMessage('El título debe tener entre 5 y 100 caracteres'),
     body('description', 'La descripción es requerida')
       .notEmpty()
-      .isLength({ min: 10, max: 1000 }),
+      .isLength({ min: 10, max: 1000 })
+      .withMessage('La descripción debe tener entre 10 y 1000 caracteres'),
     body('finishDate', 'La fecha de finalización es requerida')
       .notEmpty()
       .isISO8601().withMessage('La fecha de finalización debe ser una fecha válida')
       .toDate(),
-    body('board', 'El tablero es requerido')
+    // body('board', 'El tablero es requerido')
+    //   .notEmpty()
+    //   .isSlug(),
+    body('size', 'las medidas son requeridas')
       .notEmpty()
-      .isSlug(),
+      .isLength({ min: 1, max: 100 }),
     expressValidator,
   ],
   createRequest as RequestHandler
