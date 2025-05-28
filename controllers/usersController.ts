@@ -173,9 +173,9 @@ export const getDesigners = async (req: Request, res: Response): Promise<Respons
         ]);
 
         const requests = {
-          pending: 0,
-          attention: 0,
+          awaiting: 0,
           inProgress: 0,
+          pending: 0,
           total: 0
         }
 
@@ -184,8 +184,8 @@ export const getDesigners = async (req: Request, res: Response): Promise<Respons
             requests.pending = item.count;
           }
 
-          if(item._id === Status.ATTENTION) {
-            requests.attention = item.count;
+          if(item._id === Status.AWAITING) {
+            requests.awaiting = item.count;
           }
           
           if (item._id === Status.IN_PROGRESS) {
@@ -197,7 +197,7 @@ export const getDesigners = async (req: Request, res: Response): Promise<Respons
           ...designer.toObject(),
           requests: {
             ...requests,
-            total: requests.pending + requests.attention + requests.inProgress
+            total: requests.pending + requests.awaiting + requests.inProgress
           }
         };
       })
